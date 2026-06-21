@@ -94,7 +94,7 @@ def prior_probability(rows):
     return priors
 
 
-def conditional_probability_laplace(rows, feature, value, label):
+def conditional_probability(rows, feature, value, label):
     """
     Tính xác suất có điều kiện P(feature=value | class=label).
 
@@ -104,10 +104,9 @@ def conditional_probability_laplace(rows, feature, value, label):
         P(feature=value | class=label)
         = số mẫu có feature=value và class=label / số mẫu thuộc class=label
 
-    Trong code này dùng Laplace smoothing để tránh xác suất bằng 0.
-
-    Công thức Laplace:
-        P = (count + 1) / (total_class + k)
+    Chương trình tính trực tiếp theo tần suất xuất hiện, không dùng
+    Laplace smoothing:
+        P = count / total_class
 
     Trong đó:
         count:
@@ -116,13 +115,8 @@ def conditional_probability_laplace(rows, feature, value, label):
         total_class:
             tổng số mẫu thuộc class=label
 
-        k:
-            số giá trị khác nhau của feature trong tập dữ liệu
-
-    Lý do dùng Laplace:
-        Nếu một xác suất điều kiện bằng 0,
-        khi nhân các xác suất lại thì toàn bộ score sẽ bằng 0.
-        Laplace giúp tránh trường hợp đó.
+    Nếu count bằng 0 thì xác suất bằng 0. Khi đó score của class cũng bằng 0,
+    đúng với cách tính tay không làm trơn xác suất.
     """
     label_rows = [
         row
@@ -132,16 +126,16 @@ def conditional_probability_laplace(rows, feature, value, label):
 
     total_class = len(label_rows)
 
-    possible_values = get_feature_values(rows, feature)
-    k = len(possible_values)
-
     count = sum(
         1
         for row in label_rows
         if row[feature] == value
     )
 
-    return (count + 1) / (total_class + k)
+    if total_class == 0:
+        raise ValueError(f"Không có mẫu nào thuộc lớp '{label}'.")
+
+    return count / total_class
 
 
 def train_naive_bayes(rows, features):
@@ -197,7 +191,7 @@ def predict_naive_bayes(rows, model, sample):
         for feature in model["features"]:
             value = sample[feature]
 
-            prob = conditional_probability_laplace(
+            prob = conditional_probability(
                 rows,
                 feature,
                 value,
@@ -243,16 +237,25 @@ def print_conditional_probabilities(rows, features):
 
         for value in values:
             for label in labels:
-                prob = conditional_probability_laplace(
+                prob = conditional_probability(
                     rows,
                     feature,
                     value,
                     label
                 )
 
+                count = sum(
+                    1
+                    for row in rows
+                    if row[TARGET] == label and row[feature] == value
+                )
+                total_class = sum(
+                    1 for row in rows if row[TARGET] == label
+                )
+
                 print(
                     f"  P({feature}={value} | {TARGET}={label}) = "
-                    f"{prob:.4f}"
+                    f"{count}/{total_class} = {prob:.4f}"
                 )
 
 
@@ -287,16 +290,20 @@ def print_prediction_detail(rows, model, sample, sample_index=None):
 
     for label in model["labels"]:
         score = model["priors"][label]
+        prior_count = sum(1 for row in rows if row[TARGET] == label)
 
         print(f"Tính score cho {TARGET}={label}:")
-        print(f"  P({TARGET}={label}) = {model['priors'][label]:.4f}")
+        print(
+            f"  P({TARGET}={label}) = "
+            f"{prior_count}/{len(rows)} = {model['priors'][label]:.4f}"
+        )
 
-        formula_parts = [f"{model['priors'][label]:.4f}"]
+        formula_parts = [f"({prior_count}/{len(rows)})"]
 
         for feature in model["features"]:
             value = sample[feature]
 
-            prob = conditional_probability_laplace(
+            prob = conditional_probability(
                 rows,
                 feature,
                 value,
@@ -304,10 +311,20 @@ def print_prediction_detail(rows, model, sample, sample_index=None):
             )
 
             score *= prob
-            formula_parts.append(f"{prob:.4f}")
+
+            count = sum(
+                1
+                for row in rows
+                if row[TARGET] == label and row[feature] == value
+            )
+            total_class = sum(
+                1 for row in rows if row[TARGET] == label
+            )
+            formula_parts.append(f"({count}/{total_class})")
 
             print(
-                f"  P({feature}={value} | {TARGET}={label}) = {prob:.4f}"
+                f"  P({feature}={value} | {TARGET}={label}) = "
+                f"{count}/{total_class} = {prob:.4f}"
             )
 
         print(f"  Score({label}) = {' * '.join(formula_parts)}")
