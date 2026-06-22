@@ -1,2 +1,8 @@
 test1 copy.py
 
+# VS Code settings
+.vscode/
+
+# Python cache
+__pycache__/
+*.pyc
