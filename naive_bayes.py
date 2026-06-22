@@ -1,5 +1,4 @@
 import pandas as pd
-
 # =========================
 # 1. Tạo dữ liệu ban đầu
 # =========================
@@ -41,9 +40,20 @@ features = ["outlook", "temperature", "humidity", "wind"]
 # =========================
 # 3. Các hàm in kết quả
 # =========================
+def print_predict_title(x):
+    print("\n" + "=" * 60)
+    print(f"Dự đoán cho: {x}")
+    print("=" * 60)
+
 def print_class_header(c, class_count, total, prior):
     print(f"\nClass play = '{c}'")
     print(f"P(play='{c}') = {class_count}/{total} = {prior:.6f}")
+
+def print_conditional_probability(feature, value, c, count_value, class_count, cond_prob):
+    print(
+        f"P({feature}='{value}' | play='{c}') "
+        f"= {count_value}/{class_count} = {cond_prob:.6f}"
+    )
 
 def print_class_probability(c, prob):
     print(f"=> P(X | play='{c}') * P(play='{c}') = {prob:.6f}")
@@ -55,7 +65,6 @@ def print_compare_result(result, predicted_class):
         print(f"play='{c}': {p:.6f}")
 
     print(f"=> Dự đoán: play = '{predicted_class}'")
-
 
 def print_added_row(name, predicted):
     print(f"\nĐã thêm {name} vào DataFrame với play = '{predicted}'")
@@ -69,9 +78,7 @@ def predict_naive_bayes(df, x):
 
     result = {}
 
-    print("\n" + "=" * 60)
-    print(f"Dự đoán cho: {x}")
-    print("=" * 60)
+    print_predict_title(x)
 
     for c in classes:
         df_c = df[df["play"] == c]
@@ -90,9 +97,13 @@ def predict_naive_bayes(df, x):
 
             prob = prob * cond_prob
 
-            print(
-                f"P({feature}='{value}' | play='{c}') "
-                f"= {count_value}/{class_count} = {cond_prob:.6f}"
+            print_conditional_probability(
+                feature,
+                value,
+                c,
+                count_value,
+                class_count,
+                cond_prob
             )
 
         print_class_probability(c, prob)
