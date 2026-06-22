@@ -128,7 +128,7 @@ def print_ascii_tree(tree, indent="", target_name="Play"):
 
 
 if __name__ == "__main__":
-    print("MÔ PHỎNG TÍNH TOÁN CÂY QUYẾT ĐỊNH (DECISION TREE - ID3)")
+    print("MÔ PHỎNG TÍNH TOÁN CÂY QUYẾT ĐỊNH (DECISION TREE)")
     
     # Sửa chữ 'play' thành 'Play' cho khớp với tên cột trong Dictionary
     target_col = 'Play' 
