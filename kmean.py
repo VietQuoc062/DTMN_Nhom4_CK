@@ -15,7 +15,24 @@ def init_centroids(X, mssv, k):
     
     # Lấy k ký tự cuối mssv và chuyển thành số
     last_digits = mssv[-k:]
-    stt = [int(x) for x in last_digits]
+
+    # Xử lý trùng (ví dụ 111, 222, 333,....)
+    stt = []
+    seen = set()
+    next_node = 10  # node phụ bắt đầu từ 10
+
+    # Xử lý trùng lặp (ví dụ 111, 333,...)
+    for ch in last_digits:
+        num = int(ch)
+
+        # Nếu chưa xuất hiện thì chạy if
+        if num not in seen:
+            seen.add(num)
+            stt.append(num)
+        else:
+            # từ lần trùng thứ 2 trở đi → dùng node 10,11,...
+            stt.append(next_node)
+            next_node += 1
 
     # Lấy các điểm tương ứng làm tâm cụm ban đầu
     C = np.array([X[i] for i in stt], dtype=float)
