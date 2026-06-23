@@ -70,16 +70,18 @@ def build_tree_and_trace(data, features, target_name, depth=0):
     print(f"Bảng tính Information Gain:")
     best_feature = None
     max_gain = -1
-    
+    ig_list = []
     for feature in features:
         info_A, gain_A = calculate_info_gain(data, feature, target_name)
         print(f"* Thuộc tính '{feature:<12}': Info = {info_A:.4f}, Gain = {gain_A:.4f}")
-        
-        if gain_A > max_gain:
-            max_gain = gain_A
-            best_feature = feature
+        ig_list.append((feature,gain_A))
+
+    ig_list.sort(key=lambda x: x[1])
+    mid_index = len(ig_list) // 2
+    best_feature = ig_list[mid_index][0]
+    max_gain = ig_list[mid_index][1]
             
-    print(f"=> CHỌN THUỘC TÍNH GỐC: '{best_feature}' (Gain cao nhất = {max_gain:.4f})")
+    print(f"=> CHỌN THUỘC TÍNH GỐC: '{best_feature}' (Gain trung vị = {max_gain:.4f})")
     
     # Tạo node
     tree = {best_feature: {}}
@@ -91,8 +93,6 @@ def build_tree_and_trace(data, features, target_name, depth=0):
         subset = data[data[best_feature] == value]
         subtree = build_tree_and_trace(subset, remaining_features, target_name, depth + 1)
         tree[best_feature][value] = subtree
-
-        # print(tree)
         
     return tree
 
